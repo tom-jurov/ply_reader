@@ -1,0 +1,86 @@
+name: Build and Upload
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'  # Trigger on tags starting with 'v'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Specify a default Python version (e.g., 3.x)
+
+      - name: Install build dependencies
+        run: pip install build pipx
+
+      - name: Build sdist
+        run: pipx run build --sdist .
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  cibuildwheel:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'  # Specify a default Python version (e.g., 3.x)
+
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel==2.19.1  # Ensure the correct version is installed
+
+      - name: Build wheels
+        run: |
+          cibuildwheel --output-dir wheelhouse
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  upload_to_testpypi:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    needs: [cibuildwheel, build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: sdist
+          path: dist
+
+      - name: Download all wheels
+        run: |
+          for os in ubuntu-latest windows-latest macos-latest; do
+            actions/download-artifact@v3 --name "wheels-${os}" --path dist
+          done
+
+      - name: Install Twine
+        run: pip install twine
+
+      - name: Upload to TestPyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN }}
+        run: twine upload --repository-url https://test.pypi.org/legacy/ dist/*.whl dist/*.tar.gz

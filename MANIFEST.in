@@ -1,0 +1,4 @@
+include include/ply_reader.hpp
+include src/ply_reader.cpp
+include src/ply_reader_pybind.cpp
+include CMakeLists.txt
