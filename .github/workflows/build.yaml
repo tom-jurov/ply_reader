@@ -96,4 +96,4 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TESTPYPI_TOKEN }}
-        run: twine upload --repository-url https://test.pypi.org/legacy/ dist/*.whl dist/*.tar.gz
+        run: twine upload --repository-url https://test.pypi.org/legacy/ --verbose dist/*.whl dist/*.tar.gz
