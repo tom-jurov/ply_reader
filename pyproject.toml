@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "ply-reader"
-version = "0.1.0"
+version = "0.2.0"
 description = "Python bindings for PLYReader class"
 readme = "README.md"
 authors = [
