@@ -70,11 +70,24 @@ jobs:
           name: sdist
           path: dist
 
-      - name: Download all wheels
-        run: |
-          for os in ubuntu-latest windows-latest macos-latest; do
-            actions/download-artifact@v3 --name "wheels-${os}" --path dist
-          done
+      - name: Download wheels artifacts for Ubuntu
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels-ubuntu-latest
+          path: dist
+
+      - name: Download wheels artifacts for Windows
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels-windows-latest
+          path: dist
+
+      - name: Download wheels artifacts for MacOS
+        uses: actions/download-artifact@v3
+        with:
+          name: wheels-macos-latest
+          path: dist
+
 
       - name: Install Twine
         run: pip install twine
